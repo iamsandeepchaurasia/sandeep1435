@@ -1,0 +1,9 @@
+{
+	"name": "sandeepadf2025",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "b0f77eec-62fe-4f35-b81a-8cefb9d241e2",
+		"tenantId": "1237bcd2-a8d2-497b-a788-3400df917832"
+	}
+}
