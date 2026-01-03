@@ -1,0 +1,23 @@
+{
+	"name": "Customer_to_csv_pipe",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_linkservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "CSV_Pipe",
+				"fileSystem": "landing"
+			},
+			"columnDelimiter": "|",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

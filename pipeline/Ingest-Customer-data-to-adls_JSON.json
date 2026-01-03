@@ -1,9 +1,9 @@
 {
-	"name": "Ingest_ProductTable_To_CSV",
+	"name": "Ingest-Customer-data-to-adls_JSON",
 	"properties": {
 		"activities": [
 			{
-				"name": "Product to CSV ADLS",
+				"name": "customer-data-to-adls_JSON",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -21,18 +21,22 @@
 						"partitionOption": "None"
 					},
 					"sink": {
-						"type": "DelimitedTextSink",
+						"type": "JsonSink",
 						"storeSettings": {
 							"type": "AzureBlobFSWriteSettings"
 						},
 						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".txt"
+							"type": "JsonWriteSettings"
 						}
 					},
 					"enableStaging": false
-				}
+				},
+				"outputs": [
+					{
+						"referenceName": "Customer_to_JSON",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": [],

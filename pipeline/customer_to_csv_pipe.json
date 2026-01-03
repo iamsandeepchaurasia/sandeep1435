@@ -1,9 +1,9 @@
 {
-	"name": "Ingest_ProductTable_To_CSV",
+	"name": "customer_to_csv_pipe",
 	"properties": {
 		"activities": [
 			{
-				"name": "Product to CSV ADLS",
+				"name": "Copy data1",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -32,10 +32,16 @@
 						}
 					},
 					"enableStaging": false
-				}
+				},
+				"outputs": [
+					{
+						"referenceName": "Customer_to_csv_pipe",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": [],
-		"lastPublishTime": "2025-12-09T02:24:23Z"
+		"lastPublishTime": "2025-12-09T03:53:07Z"
 	}
 }

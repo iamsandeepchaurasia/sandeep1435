@@ -1,0 +1,19 @@
+{
+	"name": "Blob_CustomerAddress_parque_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlob_LS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "landing"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

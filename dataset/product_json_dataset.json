@@ -1,0 +1,19 @@
+{
+	"name": "product_json_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adls_linkservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "mydata",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {}
+	}
+}
