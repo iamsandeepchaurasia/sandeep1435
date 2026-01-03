@@ -1,0 +1,16 @@
+{
+	"name": "customer_sql_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_db_linkservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "SalesLT",
+			"table": "Customer"
+		}
+	}
+}

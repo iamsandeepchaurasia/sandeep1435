@@ -21,10 +21,6 @@
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
-					"dataset": {
-						"referenceName": "customer_sql_dataset",
-						"type": "DatasetReference"
-					},
 					"firstRowOnly": true
 				}
 			},
