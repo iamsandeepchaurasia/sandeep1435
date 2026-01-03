@@ -20,6 +20,10 @@
 						"sqlReaderQuery": "select count(*) as RecordCount from saleslt.customer",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "customer_sql_dataset",
+						"type": "DatasetReference"
 					}
 				}
 			},
@@ -70,8 +74,28 @@
 										"fileExtension": ".txt"
 									}
 								},
-								"enableStaging": false
-							}
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "customer_sql_dataset",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Customer_to_csv_pipe",
+									"type": "DatasetReference"
+								}
+							]
 						}
 					]
 				}
