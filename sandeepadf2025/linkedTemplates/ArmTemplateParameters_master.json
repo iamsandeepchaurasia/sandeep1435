@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "sandeepadf2025"
+		},
+		"AzureBlob_LS_connectionString": {
+			"value": ""
+		},
+		"adls_linkservice_accountKey": {
+			"value": ""
+		},
+		"sql_db_linkservice_password": {
+			"value": ""
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://sandeep28keyvault-1.vault.azure.net/"
+		},
+		"adls_linkservice_properties_typeProperties_url": {
+			"value": "https://sandeep28stg1.dfs.core.windows.net/"
+		},
+		"sql_db_linkservice_properties_typeProperties_server": {
+			"value": "sandeep28dbserver.database.windows.net"
+		},
+		"sql_db_linkservice_properties_typeProperties_database": {
+			"value": "sandeepDB2025"
+		},
+		"sql_db_linkservice_properties_typeProperties_userName": {
+			"value": "sandeep28"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
