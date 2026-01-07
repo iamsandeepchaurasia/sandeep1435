@@ -243,6 +243,220 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Incremental Pipeline with HWM update')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "get HWM date",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "HWMdataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "get last modify date",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "get HWM date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select max(ModifiedDate) as lastmodifeddate from saleslt.customer",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Copy incremental data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "get last modify date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select * from saleslt.customer where modifieddate > '@{activity('get HWM date').output.firstRow.Prop_0}' and modifieddate <= '@{activity('get last modify date').output.firstRow.lastmodifeddate}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "adls_csv_generic_dataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"directoryNameParam": "customer"
+								}
+							}
+						]
+					},
+					{
+						"name": "update HWM file",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy incremental data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select '@{activity('get last modify date').output.firstRow.lastmodifeddate}'",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "HWMdataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/HWMdataset')]",
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Ingest-Customer-data-to-adls')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -372,8 +586,8 @@
 				"lastPublishTime": "2025-12-09T02:24:23Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Customer_to_JSON')]",
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/Customer_to_JSON')]"
 			]
 		},
 		{
@@ -434,8 +648,8 @@
 				"lastPublishTime": "2025-12-05T05:48:18Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/product_json_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/product_sql_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/product_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/product_json_dataset')]"
 			]
 		},
 		{
@@ -1006,8 +1220,8 @@
 				"lastPublishTime": "2025-12-13T15:55:16Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset_filename')]",
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset_filename')]"
 			]
 		},
 		{
@@ -1342,8 +1556,8 @@
 				"lastPublishTime": "2025-12-09T03:53:07Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Customer_to_csv_pipe')]",
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/Customer_to_csv_pipe')]"
 			]
 		},
 		{
@@ -1633,6 +1847,38 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/HWMdataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adls_linkservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "HWM.txt",
+						"fileSystem": "landing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adls_linkservice')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/adls_csv_generic_dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1765,6 +2011,27 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/adls_linkservice')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/customer_sql_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sql_db_linkservice",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "SalesLT",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sql_db_linkservice')]"
 			]
 		},
 		{
@@ -2027,60 +2294,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/customer_sql_dataset')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "sql_db_linkservice",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "SalesLT",
-					"table": "Customer"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/sql_db_linkservice')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/HWMdataset')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "adls_linkservice",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "HWM.txt",
-						"fileSystem": "landing"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": false,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/adls_linkservice')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Incremental Pipeline with HWM update')]",
+			"name": "[concat(parameters('factoryName'), '/Incremental Pipeline with HWM update_in table')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -2179,15 +2393,16 @@
 								"partitionOption": "None"
 							},
 							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
+								"type": "AzureSqlSink",
+								"writeBehavior": "upsert",
+								"upsertSettings": {
+									"useTempDB": true,
+									"keys": [
+										"CustomerID"
+									]
 								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
 							},
 							"enableStaging": false,
 							"translator": {
@@ -2208,11 +2423,9 @@
 						],
 						"outputs": [
 							{
-								"referenceName": "adls_csv_generic_dataset",
+								"referenceName": "customer_sql_dataset",
 								"type": "DatasetReference",
-								"parameters": {
-									"directoryNameParam": "customer"
-								}
+								"parameters": {}
 							}
 						]
 					},
@@ -2289,8 +2502,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/HWMdataset')]",
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]"
 			]
 		}
 	]
