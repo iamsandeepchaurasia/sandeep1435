@@ -1,1 +1,6 @@
-{}
+{
+	"tablename": {
+		"type": "string",
+		"value": "saleslt.customer"
+	}
+}

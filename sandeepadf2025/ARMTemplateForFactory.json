@@ -255,6 +255,149 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Foreach_Example2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get customer count",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select count(*) as totalcount from saleslt.customer;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "count greater than 100",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get customer count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(activity('Get customer count').output.firstRow.totalcount), 100)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Table Array",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().globalParameters.tablename",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "sql_generic_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"schemaNameParam": "saleslt",
+												"tableNameParam": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "adls_csv_generic_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"directoryNameParam": {
+													"value": "@item().table_name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/sql_generic_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/If_example')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2421,23 +2564,35 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "customer_sql_dataset",
+								"referenceName": "sql_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"schemaNameParam": "saleslt",
+									"tableNameParam": "customer"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "customer_csv_DS",
+								"referenceName": "adls_csv_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"directoryNameParam": "customer"
+								}
 							}
 						]
 					},
 					{
 						"name": "Cust Address SQL to Blob Parque",
 						"type": "Copy",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "customer-data-to-adls",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -2475,16 +2630,21 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "CustomerAddress_sql_dataset",
+								"referenceName": "sql_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"schemaNameParam": "saleslt",
+									"tableNameParam": "customeraddress"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "customer_csv_DS",
+								"referenceName": "adls_csv_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"directoryNameParam": "cust_address"
+								}
 							}
 						]
 					}
@@ -2495,9 +2655,8 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/customer_csv_DS')]",
-				"[concat(variables('factoryId'), '/datasets/CustomerAddress_sql_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/sql_generic_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
 			]
 		},
 		{

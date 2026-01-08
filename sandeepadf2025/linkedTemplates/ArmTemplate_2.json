@@ -13,6 +13,123 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Nested_If_example_child')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get product record count",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select count(*) as RecordCount from saleslt.product",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "product_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": true
+						}
+					},
+					{
+						"name": "count greater than 200",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get product record count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(activity('Get product record count').output.firstRow.RecordCount, 200)",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Copy records more than 200",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "product_sql_dataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "product_to_adls_CSV_dataset",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-12-13T14:55:27Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Without_Foreach_Example')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -59,23 +176,35 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "customer_sql_dataset",
+								"referenceName": "sql_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"schemaNameParam": "saleslt",
+									"tableNameParam": "customer"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "customer_csv_DS",
+								"referenceName": "adls_csv_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"directoryNameParam": "customer"
+								}
 							}
 						]
 					},
 					{
 						"name": "Cust Address SQL to Blob Parque",
 						"type": "Copy",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "customer-data-to-adls",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -113,16 +242,21 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "CustomerAddress_sql_dataset",
+								"referenceName": "sql_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"schemaNameParam": "saleslt",
+									"tableNameParam": "customeraddress"
+								}
 							}
 						],
 						"outputs": [
 							{
-								"referenceName": "customer_csv_DS",
+								"referenceName": "adls_csv_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"directoryNameParam": "cust_address"
+								}
 							}
 						]
 					}
@@ -500,7 +634,9 @@
 				"annotations": [],
 				"lastPublishTime": "2025-12-13T14:55:28Z"
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Nested_If_example_child')]"
+			]
 		}
 	]
 }
