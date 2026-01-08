@@ -13,14 +13,14 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_Product_To_JSON')]",
+			"name": "[concat(parameters('factoryName'), '/Without_Foreach_Example')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Product count",
-						"type": "Lookup",
+						"name": "customer-data-to-adls",
+						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -33,82 +33,98 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "select count(*) as numberofrecords from saleslt.product",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
-							"dataset": {
-								"referenceName": "product_sql_dataset",
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "customer_sql_dataset",
 								"type": "DatasetReference",
 								"parameters": {}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "If Condition1",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "Product count",
-								"dependencyConditions": [
-									"Succeeded"
-								]
 							}
 						],
+						"outputs": [
+							{
+								"referenceName": "customer_csv_DS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Cust Address SQL to Blob Parque",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"expression": {
-								"value": "@greater(activity('Product count').output.firstRow.numberofrecords ,10)",
-								"type": "Expression"
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
 							},
-							"ifTrueActivities": [
-								{
-									"name": "Copy product data",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "product_sql_dataset",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "product_json_dataset",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
 								}
-							]
-						}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "CustomerAddress_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "customer_csv_DS",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -119,13 +135,82 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Ingestion_Product_Addres_To_JSON')]",
+			"name": "[concat(parameters('factoryName'), '/customer_to_csv_pipe')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Product count",
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Customer_to_csv_pipe",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-12-09T03:53:07Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/full_db_migration_example')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "get_All_table_names",
 						"type": "Lookup",
 						"dependsOn": [],
 						"policy": {
@@ -139,137 +224,39 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "select count(*) as numberofrecords from saleslt.product",
+								"sqlReaderQuery": "select table_name from information_schema.tables where table_schema='saleslt'",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
 							"dataset": {
-								"referenceName": "product_sql_dataset",
+								"referenceName": "customer_sql_dataset",
 								"type": "DatasetReference",
 								"parameters": {}
 							},
-							"firstRowOnly": true
+							"firstRowOnly": false
 						}
 					},
 					{
-						"name": "If Condition product",
-						"type": "IfCondition",
+						"name": "ForEach1",
+						"type": "ForEach",
 						"dependsOn": [
 							{
-								"activity": "Product count",
+								"activity": "get_All_table_names",
 								"dependencyConditions": [
-									"Succeeded"
+									"Completed"
 								]
 							}
 						],
 						"userProperties": [],
 						"typeProperties": {
-							"expression": {
-								"value": "@greater(activity('Product count').output.firstRow.numberofrecords ,10)",
+							"items": {
+								"value": "@activity('get_All_table_names').output.value",
 								"type": "Expression"
 							},
-							"ifTrueActivities": [
+							"batchCount": 5,
+							"activities": [
 								{
-									"name": "Copy product data",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"sink": {
-											"type": "JsonSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "JsonWriteSettings"
-											}
-										},
-										"enableStaging": false
-									},
-									"inputs": [
-										{
-											"referenceName": "product_sql_dataset",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "product_json_dataset",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
-								}
-							]
-						}
-					},
-					{
-						"name": "address count",
-						"type": "Lookup",
-						"dependsOn": [
-							{
-								"activity": "If Condition product",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": "select count(*) as numberofrecords from saleslt.address",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "CustomerAddress_sql_dataset",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": true
-						}
-					},
-					{
-						"name": "If Condition address",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "address count",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(activity('address count').output.firstRow.numberofrecords, 100)",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "Copy Address to adls csv",
+									"name": "Copy data1",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -309,14 +296,14 @@
 									},
 									"inputs": [
 										{
-											"referenceName": "CustomerAddress_sql_dataset",
+											"referenceName": "customer_sql_dataset",
 											"type": "DatasetReference",
 											"parameters": {}
 										}
 									],
 									"outputs": [
 										{
-											"referenceName": "customer_csv_DS",
+											"referenceName": "customer_csv_dataset",
 											"type": "DatasetReference",
 											"parameters": {}
 										}
@@ -329,7 +316,49 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"annotations": []
+				"annotations": [],
+				"lastPublishTime": "2025-12-13T15:55:16Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lookup_example')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "select count(*) from saleslt.product",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "customer_sql_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-12-08T18:51:24Z"
 			},
 			"dependsOn": []
 		},
