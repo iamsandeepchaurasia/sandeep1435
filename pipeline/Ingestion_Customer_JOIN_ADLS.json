@@ -1,9 +1,9 @@
 {
-	"name": "Ingestion_Customer_SQLDB_ADLS_Folder",
+	"name": "Ingestion_Customer_JOIN_ADLS",
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy data1",
+				"name": "Copy customer and address",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -17,6 +17,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT \n    COALESCE(c.FirstName, '') || ',' || \n    COALESCE(c.MiddleName, '') || ',' || \n    COALESCE(c.LastName, '') AS Name,\n\n    COALESCE(a.AddressLine1, '') || ',' || \n    COALESCE(a.AddressLine2, '') || ',' || \n    COALESCE(a.City, '') || ',' || \n    COALESCE(a.StateProvince, '') || ',' || \n    COALESCE(a.CountryRegion, '') || ',' || \n    COALESCE(a.PostalCode, '') AS Complete_Address\nFROM SalesLT.Customer c\nJOIN SalesLT.CustomerAddress ca \n    ON c.CustomerID = ca.CustomerID\nJOIN SalesLT.Address a \n    ON ca.AddressID = a.AddressID;",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -43,13 +44,13 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "CustomerAddress_sql_dataset",
+						"referenceName": "customer_sql_dataset",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "Customer_CSV_DS_folder",
+						"referenceName": "Customer_to_csv_pipe",
 						"type": "DatasetReference"
 					}
 				]
