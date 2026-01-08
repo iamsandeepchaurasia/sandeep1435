@@ -43,21 +43,35 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "customer_sql_dataset",
-						"type": "DatasetReference"
+						"referenceName": "sql_generic_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaNameParam": "saleslt",
+							"tableNameParam": "customer"
+						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "customer_csv_DS",
-						"type": "DatasetReference"
+						"referenceName": "adls_csv_generic_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"directoryNameParam": "customer"
+						}
 					}
 				]
 			},
 			{
 				"name": "Cust Address SQL to Blob Parque",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "customer-data-to-adls",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -95,14 +109,21 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "CustomerAddress_sql_dataset",
-						"type": "DatasetReference"
+						"referenceName": "sql_generic_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaNameParam": "saleslt",
+							"tableNameParam": "address"
+						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "customer_csv_DS",
-						"type": "DatasetReference"
+						"referenceName": "adls_csv_generic_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"directoryNameParam": "cust_address"
+						}
 					}
 				]
 			}
