@@ -1,5 +1,13 @@
 {
 	"name": "sandeepadf2025",
+	"properties": {
+		"globalParameters": {
+			"tablename": {
+				"type": "string",
+				"value": "saleslt.customer"
+			}
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",
