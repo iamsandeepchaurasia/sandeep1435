@@ -130,52 +130,18 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Get tablename",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "AzureSqlSource",
-								"sqlReaderQuery": "select table_name from information_schema.tables where table_name in('customer','address');",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "customer_sql_dataset",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
 						"name": "Table Array",
 						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Get tablename",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
+						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
 							"items": {
-								"value": "@activity('Get tablename').output.value",
+								"value": "@createArray('customer','customeraddress')",
 								"type": "Expression"
 							},
 							"activities": [
 								{
-									"name": "Copy data1",
+									"name": "copy data inside for each",
 									"type": "Copy",
 									"dependsOn": [],
 									"policy": {
@@ -220,7 +186,7 @@
 											"parameters": {
 												"schemaNameParam": "saleslt",
 												"tableNameParam": {
-													"value": "@item().table_name",
+													"value": "@item()",
 													"type": "Expression"
 												}
 											}
@@ -231,10 +197,7 @@
 											"referenceName": "adls_csv_generic_dataset",
 											"type": "DatasetReference",
 											"parameters": {
-												"directoryNameParam": {
-													"value": "@item().table_name",
-													"type": "Expression"
-												}
+												"directoryNameParam": "customer.foreach.assignment6"
 											}
 										}
 									]
@@ -249,7 +212,6 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/sql_generic_dataset')]",
 				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
 			]
@@ -280,9 +242,12 @@
 								"partitionOption": "None"
 							},
 							"dataset": {
-								"referenceName": "customer_sql_dataset",
+								"referenceName": "sql_generic_dataset",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"schemaNameParam": "saleslt",
+									"tableNameParam": "customer"
+								}
 							},
 							"firstRowOnly": true
 						}
@@ -303,20 +268,8 @@
 							"expression": {
 								"value": "@greater(int(activity('Get customer count').output.firstRow.totalcount), 100)",
 								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "Table Array",
-						"type": "ForEach",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@pipeline().globalParameters.tablename",
-								"type": "Expression"
 							},
-							"activities": [
+							"ifTrueActivities": [
 								{
 									"name": "Copy data1",
 									"type": "Copy",
@@ -336,15 +289,12 @@
 											"partitionOption": "None"
 										},
 										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
+											"type": "AzureSqlSink",
+											"preCopyScript": "truncate table saleslt.customer_copy",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate",
+											"disableMetricsCollection": false
 										},
 										"enableStaging": false,
 										"translator": {
@@ -362,22 +312,17 @@
 											"type": "DatasetReference",
 											"parameters": {
 												"schemaNameParam": "saleslt",
-												"tableNameParam": {
-													"value": "@item().table_name",
-													"type": "Expression"
-												}
+												"tableNameParam": "customer"
 											}
 										}
 									],
 									"outputs": [
 										{
-											"referenceName": "adls_csv_generic_dataset",
+											"referenceName": "sql_generic_dataset",
 											"type": "DatasetReference",
 											"parameters": {
-												"directoryNameParam": {
-													"value": "@item().table_name",
-													"type": "Expression"
-												}
+												"schemaNameParam": "saleslt",
+												"tableNameParam": "customer_copy"
 											}
 										}
 									]
@@ -392,9 +337,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/customer_sql_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/sql_generic_dataset')]",
-				"[concat(variables('factoryId'), '/datasets/adls_csv_generic_dataset')]"
+				"[concat(variables('factoryId'), '/datasets/sql_generic_dataset')]"
 			]
 		},
 		{
