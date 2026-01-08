@@ -113,7 +113,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"schemaNameParam": "saleslt",
-							"tableNameParam": "address"
+							"tableNameParam": "customeraddress"
 						}
 					}
 				],
