@@ -53,10 +53,17 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "adls_csv_generic_dataset",
+						"referenceName": "adls_csv_generic_dataset_filename",
 						"type": "DatasetReference",
 						"parameters": {
-							"directoryNameParam": "Assignment6-Q4"
+							"directoryNameParam": {
+								"value": "Product/@{formatDateTime(utcNow(),'yyyy')}/@{formatDateTime(utcNow(),'MM')}/@{formatDateTime(utcNow(),'dd')}",
+								"type": "Expression"
+							},
+							"fileNameParam": {
+								"value": "Product.@{formatDateTime(utcNow(),'yyyyMMdd_HHmmss')}",
+								"type": "Expression"
+							}
 						}
 					}
 				]
