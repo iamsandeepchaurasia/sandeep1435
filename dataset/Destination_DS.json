@@ -1,0 +1,30 @@
+{
+	"name": "Destination_DS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sql_db_linkservice",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "name",
+				"type": "varchar"
+			},
+			{
+				"name": "city_name",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "destination"
+		}
+	}
+}
