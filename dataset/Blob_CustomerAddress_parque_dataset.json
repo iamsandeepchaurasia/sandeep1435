@@ -10,6 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
+				"fileName": "Assignment7Q3",
+				"folderPath": "Assignment7",
 				"container": "landing"
 			},
 			"compressionCodec": "snappy"
