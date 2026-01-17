@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "Assignment7Q5",
 				"folderPath": "Assignment7",
 				"fileSystem": "landing"
 			},
