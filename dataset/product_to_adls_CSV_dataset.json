@@ -10,7 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "CSV",
+				"fileName": "Assignment7Q4",
+				"folderPath": "Assignment7",
 				"fileSystem": "landing"
 			},
 			"columnDelimiter": ",",
