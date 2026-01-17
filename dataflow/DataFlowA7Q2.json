@@ -25,7 +25,11 @@
 						"referenceName": "Customer_to_JSON",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "sink1",
+					"rejectedDataLinkedService": {
+						"referenceName": "adls_linkservice",
+						"type": "LinkedServiceReference"
+					}
 				}
 			],
 			"transformations": [
