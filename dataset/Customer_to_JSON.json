@@ -10,7 +10,8 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "JSON",
+				"fileName": "Q2Customer_Address_Join",
+				"folderPath": "Assignment7",
 				"fileSystem": "landing"
 			}
 		},
