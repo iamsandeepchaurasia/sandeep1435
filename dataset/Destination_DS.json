@@ -23,8 +23,8 @@
 			}
 		],
 		"typeProperties": {
-			"schema": "SalesLT",
-			"table": "customer_copy"
+			"schema": "dbo",
+			"table": "Customer_dummy"
 		}
 	}
 }
