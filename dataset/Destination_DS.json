@@ -24,7 +24,7 @@
 		],
 		"typeProperties": {
 			"schema": "dbo",
-			"table": "destination"
+			"table": "Customer_dummy"
 		}
 	}
 }
